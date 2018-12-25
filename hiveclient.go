@@ -32,7 +32,7 @@ package hive
 import (
   "errors"
   "fmt"
-  thrifthive "github.com/araddon/hive/thriftlib"
+  thrifthive "github.com/ralphal/hive/thriftlib"
   "github.com/araddon/thrift4go/lib/go/thrift"
   "log"
   "net"
