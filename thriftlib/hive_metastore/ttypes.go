@@ -5,7 +5,7 @@ package hive_metastore
 
 import (
 	"bytes"
-	"fb303"
+	"github.com/ralphal/hive/thriftlib/fb303"
 	"fmt"
 	"git.apache.org/thrift.git/lib/go/thrift"
 )
