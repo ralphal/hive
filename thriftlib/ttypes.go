@@ -5,11 +5,11 @@ package hive_service
 
 import (
 	"bytes"
-	"fb303"
+	"github.com/ralphal/hive/thriftlib/fb303"
 	"fmt"
 	"git.apache.org/thrift.git/lib/go/thrift"
-	"hive_metastore"
-	"queryplan"
+	"github.com/ralphal/hive/thriftlib/hive_metastore"
+	"github.com/ralphal/hive/thriftlib/queryplan"
 )
 
 // (needed to ensure safety because of naive import list construction.)
