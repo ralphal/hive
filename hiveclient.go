@@ -33,7 +33,7 @@ import (
   "errors"
   "fmt"
   thrifthive "github.com/ralphal/hive/thriftlib"
-  "github.com/araddon/thrift4go/lib/go/thrift"
+  "github.com/ralphal/thrift4go/lib/go/thrift"
   "log"
   "net"
 )
@@ -93,24 +93,14 @@ func (conn *HiveConnection) Open() error {
   if er != nil {
     return er
   }
-  ts, err := thrift.NewTSocketConn(tcpConn)
-  if err != nil {
-    return err
-  }
-  fmt.Println(ts)
-  if ts == nil {
-    return errors.New("No TSocket connection?")
-  }
 
   // the TSocket implements interface TTransport
   //trans := thrift.NewTFramedTransport(ts)
-  trans, _ := thrift.NewTNonblockingSocketConn(tcpConn)
+  trans, _ := NewTSocketConn(tcpConn)
   trans.Open()
 
-  // NewTBinaryProtocolTransport(t TTransport) *TBinaryProtocol {
   protocolfac := thrift.NewTBinaryProtocolFactoryDefault()
 
-  //NewThriftHiveClientProtocol(t thrift.TTransport, iprot thrift.TProtocol, oprot thrift.TProtocol)
   conn.Client = thrifthive.NewThriftHiveClientFactory(trans, protocolfac)
 
   log.Println("is open? ", trans.IsOpen())
