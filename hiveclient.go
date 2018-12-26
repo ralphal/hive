@@ -94,9 +94,7 @@ func (conn *HiveConnection) Open() error {
     return er
   }
 
-  // the TSocket implements interface TTransport
-  //trans := thrift.NewTFramedTransport(ts)
-  trans, _ := NewTSocketConn(tcpConn)
+  trans, _ := thrift.NewTSocketConn(tcpConn)
   trans.Open()
 
   protocolfac := thrift.NewTBinaryProtocolFactoryDefault()
