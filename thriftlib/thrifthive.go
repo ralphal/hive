@@ -32,7 +32,6 @@ type ThriftHive interface {
 	//  - NumRows
 	FetchN(numRows int32) (r []string, err error)
 	FetchAll() (r []string, err error)
-	GetSchema() (r *hive_metastore.Schema, err error)
 	GetThriftSchema() (r *hive_metastore.Schema, err error)
 	GetClusterStatus() (r *HiveClusterStatus, err error)
 	GetQueryPlan() (r *queryplan.QueryPlan, err error)
@@ -334,75 +333,6 @@ func (p *ThriftHiveClient) recvFetchAll() (value []string, err error) {
 	return
 }
 
-func (p *ThriftHiveClient) GetSchema() (r *hive_metastore.Schema, err error) {
-	if err = p.sendGetSchema(); err != nil {
-		return
-	}
-	return p.recvGetSchema()
-}
-
-func (p *ThriftHiveClient) sendGetSchema() (err error) {
-	oprot := p.OutputProtocol
-	if oprot == nil {
-		oprot = p.ProtocolFactory.GetProtocol(p.Transport)
-		p.OutputProtocol = oprot
-	}
-	p.SeqId++
-	if err = oprot.WriteMessageBegin("getSchema", thrift.CALL, p.SeqId); err != nil {
-		return
-	}
-	args := GetSchemaArgs{}
-	if err = args.Write(oprot); err != nil {
-		return
-	}
-	if err = oprot.WriteMessageEnd(); err != nil {
-		return
-	}
-	return oprot.Flush()
-}
-
-func (p *ThriftHiveClient) recvGetSchema() (value *hive_metastore.Schema, err error) {
-	iprot := p.InputProtocol
-	if iprot == nil {
-		iprot = p.ProtocolFactory.GetProtocol(p.Transport)
-		p.InputProtocol = iprot
-	}
-	_, mTypeId, seqId, err := iprot.ReadMessageBegin()
-	if err != nil {
-		return
-	}
-	if mTypeId == thrift.EXCEPTION {
-		error8 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
-		var error9 error
-		error9, err = error8.Read(iprot)
-		if err != nil {
-			return
-		}
-		if err = iprot.ReadMessageEnd(); err != nil {
-			return
-		}
-		err = error9
-		return
-	}
-	if p.SeqId != seqId {
-		err = thrift.NewTApplicationException(thrift.BAD_SEQUENCE_ID, "getSchema failed: out of sequence response")
-		return
-	}
-	result := GetSchemaResult{}
-	if err = result.Read(iprot); err != nil {
-		return
-	}
-	if err = iprot.ReadMessageEnd(); err != nil {
-		return
-	}
-	if result.Ex != nil {
-		err = result.Ex
-		return
-	}
-	value = result.GetSuccess()
-	return
-}
-
 func (p *ThriftHiveClient) GetThriftSchema() (r *hive_metastore.Schema, err error) {
 	if err = p.sendGetThriftSchema(); err != nil {
 		return
@@ -441,16 +371,16 @@ func (p *ThriftHiveClient) recvGetThriftSchema() (value *hive_metastore.Schema, 
 		return
 	}
 	if mTypeId == thrift.EXCEPTION {
-		error10 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
-		var error11 error
-		error11, err = error10.Read(iprot)
+		error8 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
+		var error9 error
+		error9, err = error8.Read(iprot)
 		if err != nil {
 			return
 		}
 		if err = iprot.ReadMessageEnd(); err != nil {
 			return
 		}
-		err = error11
+		err = error9
 		return
 	}
 	if p.SeqId != seqId {
@@ -510,16 +440,16 @@ func (p *ThriftHiveClient) recvGetClusterStatus() (value *HiveClusterStatus, err
 		return
 	}
 	if mTypeId == thrift.EXCEPTION {
-		error12 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
-		var error13 error
-		error13, err = error12.Read(iprot)
+		error10 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
+		var error11 error
+		error11, err = error10.Read(iprot)
 		if err != nil {
 			return
 		}
 		if err = iprot.ReadMessageEnd(); err != nil {
 			return
 		}
-		err = error13
+		err = error11
 		return
 	}
 	if p.SeqId != seqId {
@@ -579,16 +509,16 @@ func (p *ThriftHiveClient) recvGetQueryPlan() (value *queryplan.QueryPlan, err e
 		return
 	}
 	if mTypeId == thrift.EXCEPTION {
-		error14 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
-		var error15 error
-		error15, err = error14.Read(iprot)
+		error12 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
+		var error13 error
+		error13, err = error12.Read(iprot)
 		if err != nil {
 			return
 		}
 		if err = iprot.ReadMessageEnd(); err != nil {
 			return
 		}
-		err = error15
+		err = error13
 		return
 	}
 	if p.SeqId != seqId {
@@ -648,16 +578,16 @@ func (p *ThriftHiveClient) recvClean() (err error) {
 		return
 	}
 	if mTypeId == thrift.EXCEPTION {
-		error16 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
-		var error17 error
-		error17, err = error16.Read(iprot)
+		error14 := thrift.NewTApplicationException(thrift.UNKNOWN_APPLICATION_EXCEPTION, "Unknown Exception")
+		var error15 error
+		error15, err = error14.Read(iprot)
 		if err != nil {
 			return
 		}
 		if err = iprot.ReadMessageEnd(); err != nil {
 			return
 		}
-		err = error17
+		err = error15
 		return
 	}
 	if p.SeqId != seqId {
@@ -679,17 +609,16 @@ type ThriftHiveProcessor struct {
 }
 
 func NewThriftHiveProcessor(handler ThriftHive) *ThriftHiveProcessor {
-	self18 := &ThriftHiveProcessor{hive_metastore.NewThriftHiveMetastoreProcessor(handler)}
-	self18.AddToProcessorMap("execute", &thriftHiveProcessorExecute{handler: handler})
-	self18.AddToProcessorMap("fetchOne", &thriftHiveProcessorFetchOne{handler: handler})
-	self18.AddToProcessorMap("fetchN", &thriftHiveProcessorFetchN{handler: handler})
-	self18.AddToProcessorMap("fetchAll", &thriftHiveProcessorFetchAll{handler: handler})
-	self18.AddToProcessorMap("getSchema", &thriftHiveProcessorGetSchema{handler: handler})
-	self18.AddToProcessorMap("getThriftSchema", &thriftHiveProcessorGetThriftSchema{handler: handler})
-	self18.AddToProcessorMap("getClusterStatus", &thriftHiveProcessorGetClusterStatus{handler: handler})
-	self18.AddToProcessorMap("getQueryPlan", &thriftHiveProcessorGetQueryPlan{handler: handler})
-	self18.AddToProcessorMap("clean", &thriftHiveProcessorClean{handler: handler})
-	return self18
+	self16 := &ThriftHiveProcessor{hive_metastore.NewThriftHiveMetastoreProcessor(handler)}
+	self16.AddToProcessorMap("execute", &thriftHiveProcessorExecute{handler: handler})
+	self16.AddToProcessorMap("fetchOne", &thriftHiveProcessorFetchOne{handler: handler})
+	self16.AddToProcessorMap("fetchN", &thriftHiveProcessorFetchN{handler: handler})
+	self16.AddToProcessorMap("fetchAll", &thriftHiveProcessorFetchAll{handler: handler})
+	self16.AddToProcessorMap("getThriftSchema", &thriftHiveProcessorGetThriftSchema{handler: handler})
+	self16.AddToProcessorMap("getClusterStatus", &thriftHiveProcessorGetClusterStatus{handler: handler})
+	self16.AddToProcessorMap("getQueryPlan", &thriftHiveProcessorGetQueryPlan{handler: handler})
+	self16.AddToProcessorMap("clean", &thriftHiveProcessorClean{handler: handler})
+	return self16
 }
 
 type thriftHiveProcessorExecute struct {
@@ -884,59 +813,6 @@ func (p *thriftHiveProcessorFetchAll) Process(seqId int32, iprot, oprot thrift.T
 		result.Success = retval
 	}
 	if err2 = oprot.WriteMessageBegin("fetchAll", thrift.REPLY, seqId); err2 != nil {
-		err = err2
-	}
-	if err2 = result.Write(oprot); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err2 = oprot.Flush(); err == nil && err2 != nil {
-		err = err2
-	}
-	if err != nil {
-		return
-	}
-	return true, err
-}
-
-type thriftHiveProcessorGetSchema struct {
-	handler ThriftHive
-}
-
-func (p *thriftHiveProcessorGetSchema) Process(seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := GetSchemaArgs{}
-	if err = args.Read(iprot); err != nil {
-		iprot.ReadMessageEnd()
-		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("getSchema", thrift.EXCEPTION, seqId)
-		x.Write(oprot)
-		oprot.WriteMessageEnd()
-		oprot.Flush()
-		return false, err
-	}
-
-	iprot.ReadMessageEnd()
-	result := GetSchemaResult{}
-	var retval *hive_metastore.Schema
-	var err2 error
-	if retval, err2 = p.handler.GetSchema(); err2 != nil {
-		switch v := err2.(type) {
-		case *HiveServerException:
-			result.Ex = v
-		default:
-			x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getSchema: "+err2.Error())
-			oprot.WriteMessageBegin("getSchema", thrift.EXCEPTION, seqId)
-			x.Write(oprot)
-			oprot.WriteMessageEnd()
-			oprot.Flush()
-			return true, err2
-		}
-	} else {
-		result.Success = retval
-	}
-	if err2 = oprot.WriteMessageBegin("getSchema", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -1704,13 +1580,13 @@ func (p *FetchNResult) ReadField0(iprot thrift.TProtocol) error {
 	tSlice := make([]string, 0, size)
 	p.Success = tSlice
 	for i := 0; i < size; i++ {
-		var _elem19 string
+		var _elem17 string
 		if v, err := iprot.ReadString(); err != nil {
 			return fmt.Errorf("error reading field 0: %s", err)
 		} else {
-			_elem19 = v
+			_elem17 = v
 		}
-		p.Success = append(p.Success, _elem19)
+		p.Success = append(p.Success, _elem17)
 	}
 	if err := iprot.ReadListEnd(); err != nil {
 		return fmt.Errorf("error reading list end: %s", err)
@@ -1917,13 +1793,13 @@ func (p *FetchAllResult) ReadField0(iprot thrift.TProtocol) error {
 	tSlice := make([]string, 0, size)
 	p.Success = tSlice
 	for i := 0; i < size; i++ {
-		var _elem20 string
+		var _elem18 string
 		if v, err := iprot.ReadString(); err != nil {
 			return fmt.Errorf("error reading field 0: %s", err)
 		} else {
-			_elem20 = v
+			_elem18 = v
 		}
-		p.Success = append(p.Success, _elem20)
+		p.Success = append(p.Success, _elem18)
 	}
 	if err := iprot.ReadListEnd(); err != nil {
 		return fmt.Errorf("error reading list end: %s", err)
@@ -2001,200 +1877,6 @@ func (p *FetchAllResult) String() string {
 		return "<nil>"
 	}
 	return fmt.Sprintf("FetchAllResult(%+v)", *p)
-}
-
-type GetSchemaArgs struct {
-}
-
-func NewGetSchemaArgs() *GetSchemaArgs {
-	return &GetSchemaArgs{}
-}
-
-func (p *GetSchemaArgs) Read(iprot thrift.TProtocol) error {
-	if _, err := iprot.ReadStructBegin(); err != nil {
-		return fmt.Errorf("%T read error: %s", p, err)
-	}
-	for {
-		_, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
-		if err != nil {
-			return fmt.Errorf("%T field %d read error: %s", p, fieldId, err)
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-		if err := iprot.Skip(fieldTypeId); err != nil {
-			return err
-		}
-		if err := iprot.ReadFieldEnd(); err != nil {
-			return err
-		}
-	}
-	if err := iprot.ReadStructEnd(); err != nil {
-		return fmt.Errorf("%T read struct end error: %s", p, err)
-	}
-	return nil
-}
-
-func (p *GetSchemaArgs) Write(oprot thrift.TProtocol) error {
-	if err := oprot.WriteStructBegin("getSchema_args"); err != nil {
-		return fmt.Errorf("%T write struct begin error: %s", p, err)
-	}
-	if err := oprot.WriteFieldStop(); err != nil {
-		return fmt.Errorf("write field stop error: %s", err)
-	}
-	if err := oprot.WriteStructEnd(); err != nil {
-		return fmt.Errorf("write struct stop error: %s", err)
-	}
-	return nil
-}
-
-func (p *GetSchemaArgs) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("GetSchemaArgs(%+v)", *p)
-}
-
-type GetSchemaResult struct {
-	Success *hive_metastore.Schema `thrift:"success,0" json:"success"`
-	Ex      *HiveServerException   `thrift:"ex,1" json:"ex"`
-}
-
-func NewGetSchemaResult() *GetSchemaResult {
-	return &GetSchemaResult{}
-}
-
-var GetSchemaResult_Success_DEFAULT *hive_metastore.Schema
-
-func (p *GetSchemaResult) GetSuccess() *hive_metastore.Schema {
-	if !p.IsSetSuccess() {
-		return GetSchemaResult_Success_DEFAULT
-	}
-	return p.Success
-}
-
-var GetSchemaResult_Ex_DEFAULT *HiveServerException
-
-func (p *GetSchemaResult) GetEx() *HiveServerException {
-	if !p.IsSetEx() {
-		return GetSchemaResult_Ex_DEFAULT
-	}
-	return p.Ex
-}
-func (p *GetSchemaResult) IsSetSuccess() bool {
-	return p.Success != nil
-}
-
-func (p *GetSchemaResult) IsSetEx() bool {
-	return p.Ex != nil
-}
-
-func (p *GetSchemaResult) Read(iprot thrift.TProtocol) error {
-	if _, err := iprot.ReadStructBegin(); err != nil {
-		return fmt.Errorf("%T read error: %s", p, err)
-	}
-	for {
-		_, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
-		if err != nil {
-			return fmt.Errorf("%T field %d read error: %s", p, fieldId, err)
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-		switch fieldId {
-		case 0:
-			if err := p.ReadField0(iprot); err != nil {
-				return err
-			}
-		case 1:
-			if err := p.ReadField1(iprot); err != nil {
-				return err
-			}
-		default:
-			if err := iprot.Skip(fieldTypeId); err != nil {
-				return err
-			}
-		}
-		if err := iprot.ReadFieldEnd(); err != nil {
-			return err
-		}
-	}
-	if err := iprot.ReadStructEnd(); err != nil {
-		return fmt.Errorf("%T read struct end error: %s", p, err)
-	}
-	return nil
-}
-
-func (p *GetSchemaResult) ReadField0(iprot thrift.TProtocol) error {
-	p.Success = &hive_metastore.Schema{}
-	if err := p.Success.Read(iprot); err != nil {
-		return fmt.Errorf("%T error reading struct: %s", p.Success, err)
-	}
-	return nil
-}
-
-func (p *GetSchemaResult) ReadField1(iprot thrift.TProtocol) error {
-	p.Ex = &HiveServerException{}
-	if err := p.Ex.Read(iprot); err != nil {
-		return fmt.Errorf("%T error reading struct: %s", p.Ex, err)
-	}
-	return nil
-}
-
-func (p *GetSchemaResult) Write(oprot thrift.TProtocol) error {
-	if err := oprot.WriteStructBegin("getSchema_result"); err != nil {
-		return fmt.Errorf("%T write struct begin error: %s", p, err)
-	}
-	if err := p.writeField0(oprot); err != nil {
-		return err
-	}
-	if err := p.writeField1(oprot); err != nil {
-		return err
-	}
-	if err := oprot.WriteFieldStop(); err != nil {
-		return fmt.Errorf("write field stop error: %s", err)
-	}
-	if err := oprot.WriteStructEnd(); err != nil {
-		return fmt.Errorf("write struct stop error: %s", err)
-	}
-	return nil
-}
-
-func (p *GetSchemaResult) writeField0(oprot thrift.TProtocol) (err error) {
-	if p.IsSetSuccess() {
-		if err := oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
-			return fmt.Errorf("%T write field begin error 0:success: %s", p, err)
-		}
-		if err := p.Success.Write(oprot); err != nil {
-			return fmt.Errorf("%T error writing struct: %s", p.Success, err)
-		}
-		if err := oprot.WriteFieldEnd(); err != nil {
-			return fmt.Errorf("%T write field end error 0:success: %s", p, err)
-		}
-	}
-	return err
-}
-
-func (p *GetSchemaResult) writeField1(oprot thrift.TProtocol) (err error) {
-	if p.IsSetEx() {
-		if err := oprot.WriteFieldBegin("ex", thrift.STRUCT, 1); err != nil {
-			return fmt.Errorf("%T write field begin error 1:ex: %s", p, err)
-		}
-		if err := p.Ex.Write(oprot); err != nil {
-			return fmt.Errorf("%T error writing struct: %s", p.Ex, err)
-		}
-		if err := oprot.WriteFieldEnd(); err != nil {
-			return fmt.Errorf("%T write field end error 1:ex: %s", p, err)
-		}
-	}
-	return err
-}
-
-func (p *GetSchemaResult) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("GetSchemaResult(%+v)", *p)
 }
 
 type GetThriftSchemaArgs struct {

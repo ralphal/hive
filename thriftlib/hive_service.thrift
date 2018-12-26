@@ -70,7 +70,7 @@ service ThriftHive extends hive_metastore.ThriftHiveMetastore {
   list<string> fetchAll() throws(1:HiveServerException ex)
 
   # Get a schema object with fields represented with native Hive types
-  hive_metastore.Schema getSchema() throws(1:HiveServerException ex)
+  # hive_metastore.Schema getSchema() throws(1:HiveServerException ex)
 
   # Get a schema object with fields represented with Thrift DDL types
   hive_metastore.Schema getThriftSchema() throws(1:HiveServerException ex)
