@@ -1,32 +1,3 @@
-/*
-Hive:  The go thrift library for connecting to hive server.   
-
-This is just the generated Thrift-Hive and a very small connection wrapper.
-
-
-Usage:
-
-    func main() {
-
-      hive.MakePool("192.168.1.17:10000")
-
-      conn, err := GetHiveConn()
-      if err == nil {
-        er, err := conn.Client.Execute("SELECT * FROM logevent")
-        if er == nil && err == nil {
-          for {
-            row, _, _ := conn.Client.FetchOne()
-            log.Println("row ", row)
-          }
-        }
-      }
-      if conn != nil {
-        // make sure to check connection back into pool
-        conn.Checkin()
-      }
-    }
-
-*/
 package hive
 
 import (

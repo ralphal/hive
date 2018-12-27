@@ -14,15 +14,27 @@ import (
         "strings"
         "git.apache.org/thrift.git/lib/go/thrift"
 	"fb303"
-        "hive_metastore"
+	"hive_metastore"
+	"queryplan"
+        "hive_service"
 )
 
 var _ = fb303.GoUnusedProtection__
+var _ = hive_metastore.GoUnusedProtection__
+var _ = queryplan.GoUnusedProtection__
 
 func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
+  fmt.Fprintln(os.Stderr, "  void execute(string query)")
+  fmt.Fprintln(os.Stderr, "  string fetchOne()")
+  fmt.Fprintln(os.Stderr, "   fetchN(i32 numRows)")
+  fmt.Fprintln(os.Stderr, "   fetchAll()")
+  fmt.Fprintln(os.Stderr, "  Schema getThriftSchema()")
+  fmt.Fprintln(os.Stderr, "  HiveClusterStatus getClusterStatus()")
+  fmt.Fprintln(os.Stderr, "  QueryPlan getQueryPlan()")
+  fmt.Fprintln(os.Stderr, "  void clean()")
   fmt.Fprintln(os.Stderr, "  void create_database(Database database)")
   fmt.Fprintln(os.Stderr, "  Database get_database(string name)")
   fmt.Fprintln(os.Stderr, "  void drop_database(string name, bool deleteData)")
@@ -180,31 +192,104 @@ func main() {
     Usage()
     os.Exit(1)
   }
-  client := hive_metastore.NewThriftHiveMetastoreClientFactory(trans, protocolFactory)
+  client := hive_service.NewThriftHiveClientFactory(trans, protocolFactory)
   if err := trans.Open(); err != nil {
     fmt.Fprintln(os.Stderr, "Error opening socket to ", host, ":", port, " ", err)
     os.Exit(1)
   }
   
   switch cmd {
+  case "execute":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "Execute requires 1 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.Execute(value0))
+    fmt.Print("\n")
+    break
+  case "fetchOne":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "FetchOne requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.FetchOne())
+    fmt.Print("\n")
+    break
+  case "fetchN":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "FetchN requires 1 args")
+      flag.Usage()
+    }
+    tmp0, err20 := (strconv.Atoi(flag.Arg(1)))
+    if err20 != nil {
+      Usage()
+      return
+    }
+    argvalue0 := int32(tmp0)
+    value0 := argvalue0
+    fmt.Print(client.FetchN(value0))
+    fmt.Print("\n")
+    break
+  case "fetchAll":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "FetchAll requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.FetchAll())
+    fmt.Print("\n")
+    break
+  case "getThriftSchema":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "GetThriftSchema requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.GetThriftSchema())
+    fmt.Print("\n")
+    break
+  case "getClusterStatus":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "GetClusterStatus requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.GetClusterStatus())
+    fmt.Print("\n")
+    break
+  case "getQueryPlan":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "GetQueryPlan requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.GetQueryPlan())
+    fmt.Print("\n")
+    break
+  case "clean":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "Clean requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.Clean())
+    fmt.Print("\n")
+    break
   case "create_database":
     if flag.NArg() - 1 != 1 {
       fmt.Fprintln(os.Stderr, "CreateDatabase requires 1 args")
       flag.Usage()
     }
-    arg181 := flag.Arg(1)
-    mbTrans182 := thrift.NewTMemoryBufferLen(len(arg181))
-    defer mbTrans182.Close()
-    _, err183 := mbTrans182.WriteString(arg181)
-    if err183 != nil {
+    arg21 := flag.Arg(1)
+    mbTrans22 := thrift.NewTMemoryBufferLen(len(arg21))
+    defer mbTrans22.Close()
+    _, err23 := mbTrans22.WriteString(arg21)
+    if err23 != nil {
       Usage()
       return
     }
-    factory184 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt185 := factory184.GetProtocol(mbTrans182)
+    factory24 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt25 := factory24.GetProtocol(mbTrans22)
     argvalue0 := hive_metastore.NewDatabase()
-    err186 := argvalue0.Read(jsProt185)
-    if err186 != nil {
+    err26 := argvalue0.Read(jsProt25)
+    if err26 != nil {
       Usage()
       return
     }
@@ -259,19 +344,19 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    arg192 := flag.Arg(2)
-    mbTrans193 := thrift.NewTMemoryBufferLen(len(arg192))
-    defer mbTrans193.Close()
-    _, err194 := mbTrans193.WriteString(arg192)
-    if err194 != nil {
+    arg32 := flag.Arg(2)
+    mbTrans33 := thrift.NewTMemoryBufferLen(len(arg32))
+    defer mbTrans33.Close()
+    _, err34 := mbTrans33.WriteString(arg32)
+    if err34 != nil {
       Usage()
       return
     }
-    factory195 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt196 := factory195.GetProtocol(mbTrans193)
+    factory35 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt36 := factory35.GetProtocol(mbTrans33)
     argvalue1 := hive_metastore.NewDatabase()
-    err197 := argvalue1.Read(jsProt196)
-    if err197 != nil {
+    err37 := argvalue1.Read(jsProt36)
+    if err37 != nil {
       Usage()
       return
     }
@@ -294,19 +379,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "CreateType requires 1 args")
       flag.Usage()
     }
-    arg199 := flag.Arg(1)
-    mbTrans200 := thrift.NewTMemoryBufferLen(len(arg199))
-    defer mbTrans200.Close()
-    _, err201 := mbTrans200.WriteString(arg199)
-    if err201 != nil {
+    arg39 := flag.Arg(1)
+    mbTrans40 := thrift.NewTMemoryBufferLen(len(arg39))
+    defer mbTrans40.Close()
+    _, err41 := mbTrans40.WriteString(arg39)
+    if err41 != nil {
       Usage()
       return
     }
-    factory202 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt203 := factory202.GetProtocol(mbTrans200)
+    factory42 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt43 := factory42.GetProtocol(mbTrans40)
     argvalue0 := hive_metastore.NewType()
-    err204 := argvalue0.Read(jsProt203)
-    if err204 != nil {
+    err44 := argvalue0.Read(jsProt43)
+    if err44 != nil {
       Usage()
       return
     }
@@ -363,19 +448,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "CreateTable requires 1 args")
       flag.Usage()
     }
-    arg211 := flag.Arg(1)
-    mbTrans212 := thrift.NewTMemoryBufferLen(len(arg211))
-    defer mbTrans212.Close()
-    _, err213 := mbTrans212.WriteString(arg211)
-    if err213 != nil {
+    arg51 := flag.Arg(1)
+    mbTrans52 := thrift.NewTMemoryBufferLen(len(arg51))
+    defer mbTrans52.Close()
+    _, err53 := mbTrans52.WriteString(arg51)
+    if err53 != nil {
       Usage()
       return
     }
-    factory214 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt215 := factory214.GetProtocol(mbTrans212)
+    factory54 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt55 := factory54.GetProtocol(mbTrans52)
     argvalue0 := hive_metastore.NewTable()
-    err216 := argvalue0.Read(jsProt215)
-    if err216 != nil {
+    err56 := argvalue0.Read(jsProt55)
+    if err56 != nil {
       Usage()
       return
     }
@@ -440,19 +525,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg227 := flag.Arg(3)
-    mbTrans228 := thrift.NewTMemoryBufferLen(len(arg227))
-    defer mbTrans228.Close()
-    _, err229 := mbTrans228.WriteString(arg227)
-    if err229 != nil {
+    arg67 := flag.Arg(3)
+    mbTrans68 := thrift.NewTMemoryBufferLen(len(arg67))
+    defer mbTrans68.Close()
+    _, err69 := mbTrans68.WriteString(arg67)
+    if err69 != nil {
       Usage()
       return
     }
-    factory230 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt231 := factory230.GetProtocol(mbTrans228)
+    factory70 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt71 := factory70.GetProtocol(mbTrans68)
     argvalue2 := hive_metastore.NewTable()
-    err232 := argvalue2.Read(jsProt231)
-    if err232 != nil {
+    err72 := argvalue2.Read(jsProt71)
+    if err72 != nil {
       Usage()
       return
     }
@@ -465,19 +550,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "AddPartition requires 1 args")
       flag.Usage()
     }
-    arg233 := flag.Arg(1)
-    mbTrans234 := thrift.NewTMemoryBufferLen(len(arg233))
-    defer mbTrans234.Close()
-    _, err235 := mbTrans234.WriteString(arg233)
-    if err235 != nil {
+    arg73 := flag.Arg(1)
+    mbTrans74 := thrift.NewTMemoryBufferLen(len(arg73))
+    defer mbTrans74.Close()
+    _, err75 := mbTrans74.WriteString(arg73)
+    if err75 != nil {
       Usage()
       return
     }
-    factory236 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt237 := factory236.GetProtocol(mbTrans234)
+    factory76 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt77 := factory76.GetProtocol(mbTrans74)
     argvalue0 := hive_metastore.NewPartition()
-    err238 := argvalue0.Read(jsProt237)
-    if err238 != nil {
+    err78 := argvalue0.Read(jsProt77)
+    if err78 != nil {
       Usage()
       return
     }
@@ -494,19 +579,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg241 := flag.Arg(3)
-    mbTrans242 := thrift.NewTMemoryBufferLen(len(arg241))
-    defer mbTrans242.Close()
-    _, err243 := mbTrans242.WriteString(arg241)
-    if err243 != nil { 
+    arg81 := flag.Arg(3)
+    mbTrans82 := thrift.NewTMemoryBufferLen(len(arg81))
+    defer mbTrans82.Close()
+    _, err83 := mbTrans82.WriteString(arg81)
+    if err83 != nil { 
       Usage()
       return
     }
-    factory244 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt245 := factory244.GetProtocol(mbTrans242)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreAppendPartitionArgs()
-    err246 := containerStruct2.ReadField3(jsProt245)
-    if err246 != nil {
+    factory84 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt85 := factory84.GetProtocol(mbTrans82)
+    containerStruct2 := hive_service.NewThriftHiveAppendPartitionArgs()
+    err86 := containerStruct2.ReadField3(jsProt85)
+    if err86 != nil {
       Usage()
       return
     }
@@ -538,19 +623,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg252 := flag.Arg(3)
-    mbTrans253 := thrift.NewTMemoryBufferLen(len(arg252))
-    defer mbTrans253.Close()
-    _, err254 := mbTrans253.WriteString(arg252)
-    if err254 != nil { 
+    arg92 := flag.Arg(3)
+    mbTrans93 := thrift.NewTMemoryBufferLen(len(arg92))
+    defer mbTrans93.Close()
+    _, err94 := mbTrans93.WriteString(arg92)
+    if err94 != nil { 
       Usage()
       return
     }
-    factory255 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt256 := factory255.GetProtocol(mbTrans253)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreDropPartitionArgs()
-    err257 := containerStruct2.ReadField3(jsProt256)
-    if err257 != nil {
+    factory95 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt96 := factory95.GetProtocol(mbTrans93)
+    containerStruct2 := hive_service.NewThriftHiveDropPartitionArgs()
+    err97 := containerStruct2.ReadField3(jsProt96)
+    if err97 != nil {
       Usage()
       return
     }
@@ -586,19 +671,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg265 := flag.Arg(3)
-    mbTrans266 := thrift.NewTMemoryBufferLen(len(arg265))
-    defer mbTrans266.Close()
-    _, err267 := mbTrans266.WriteString(arg265)
-    if err267 != nil { 
+    arg105 := flag.Arg(3)
+    mbTrans106 := thrift.NewTMemoryBufferLen(len(arg105))
+    defer mbTrans106.Close()
+    _, err107 := mbTrans106.WriteString(arg105)
+    if err107 != nil { 
       Usage()
       return
     }
-    factory268 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt269 := factory268.GetProtocol(mbTrans266)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPartitionArgs()
-    err270 := containerStruct2.ReadField3(jsProt269)
-    if err270 != nil {
+    factory108 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt109 := factory108.GetProtocol(mbTrans106)
+    containerStruct2 := hive_service.NewThriftHiveGetPartitionArgs()
+    err110 := containerStruct2.ReadField3(jsProt109)
+    if err110 != nil {
       Usage()
       return
     }
@@ -616,19 +701,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg273 := flag.Arg(3)
-    mbTrans274 := thrift.NewTMemoryBufferLen(len(arg273))
-    defer mbTrans274.Close()
-    _, err275 := mbTrans274.WriteString(arg273)
-    if err275 != nil { 
+    arg113 := flag.Arg(3)
+    mbTrans114 := thrift.NewTMemoryBufferLen(len(arg113))
+    defer mbTrans114.Close()
+    _, err115 := mbTrans114.WriteString(arg113)
+    if err115 != nil { 
       Usage()
       return
     }
-    factory276 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt277 := factory276.GetProtocol(mbTrans274)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPartitionWithAuthArgs()
-    err278 := containerStruct2.ReadField3(jsProt277)
-    if err278 != nil {
+    factory116 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt117 := factory116.GetProtocol(mbTrans114)
+    containerStruct2 := hive_service.NewThriftHiveGetPartitionWithAuthArgs()
+    err118 := containerStruct2.ReadField3(jsProt117)
+    if err118 != nil {
       Usage()
       return
     }
@@ -636,19 +721,19 @@ func main() {
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
-    arg280 := flag.Arg(5)
-    mbTrans281 := thrift.NewTMemoryBufferLen(len(arg280))
-    defer mbTrans281.Close()
-    _, err282 := mbTrans281.WriteString(arg280)
-    if err282 != nil { 
+    arg120 := flag.Arg(5)
+    mbTrans121 := thrift.NewTMemoryBufferLen(len(arg120))
+    defer mbTrans121.Close()
+    _, err122 := mbTrans121.WriteString(arg120)
+    if err122 != nil { 
       Usage()
       return
     }
-    factory283 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt284 := factory283.GetProtocol(mbTrans281)
-    containerStruct4 := hive_metastore.NewThriftHiveMetastoreGetPartitionWithAuthArgs()
-    err285 := containerStruct4.ReadField5(jsProt284)
-    if err285 != nil {
+    factory123 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt124 := factory123.GetProtocol(mbTrans121)
+    containerStruct4 := hive_service.NewThriftHiveGetPartitionWithAuthArgs()
+    err125 := containerStruct4.ReadField5(jsProt124)
+    if err125 != nil {
       Usage()
       return
     }
@@ -680,8 +765,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    tmp2, err291 := (strconv.Atoi(flag.Arg(3)))
-    if err291 != nil {
+    tmp2, err131 := (strconv.Atoi(flag.Arg(3)))
+    if err131 != nil {
       Usage()
       return
     }
@@ -699,8 +784,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    tmp2, err294 := (strconv.Atoi(flag.Arg(3)))
-    if err294 != nil {
+    tmp2, err134 := (strconv.Atoi(flag.Arg(3)))
+    if err134 != nil {
       Usage()
       return
     }
@@ -708,19 +793,19 @@ func main() {
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
-    arg296 := flag.Arg(5)
-    mbTrans297 := thrift.NewTMemoryBufferLen(len(arg296))
-    defer mbTrans297.Close()
-    _, err298 := mbTrans297.WriteString(arg296)
-    if err298 != nil { 
+    arg136 := flag.Arg(5)
+    mbTrans137 := thrift.NewTMemoryBufferLen(len(arg136))
+    defer mbTrans137.Close()
+    _, err138 := mbTrans137.WriteString(arg136)
+    if err138 != nil { 
       Usage()
       return
     }
-    factory299 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt300 := factory299.GetProtocol(mbTrans297)
-    containerStruct4 := hive_metastore.NewThriftHiveMetastoreGetPartitionsWithAuthArgs()
-    err301 := containerStruct4.ReadField5(jsProt300)
-    if err301 != nil {
+    factory139 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt140 := factory139.GetProtocol(mbTrans137)
+    containerStruct4 := hive_service.NewThriftHiveGetPartitionsWithAuthArgs()
+    err141 := containerStruct4.ReadField5(jsProt140)
+    if err141 != nil {
       Usage()
       return
     }
@@ -738,8 +823,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    tmp2, err304 := (strconv.Atoi(flag.Arg(3)))
-    if err304 != nil {
+    tmp2, err144 := (strconv.Atoi(flag.Arg(3)))
+    if err144 != nil {
       Usage()
       return
     }
@@ -757,26 +842,26 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg307 := flag.Arg(3)
-    mbTrans308 := thrift.NewTMemoryBufferLen(len(arg307))
-    defer mbTrans308.Close()
-    _, err309 := mbTrans308.WriteString(arg307)
-    if err309 != nil { 
+    arg147 := flag.Arg(3)
+    mbTrans148 := thrift.NewTMemoryBufferLen(len(arg147))
+    defer mbTrans148.Close()
+    _, err149 := mbTrans148.WriteString(arg147)
+    if err149 != nil { 
       Usage()
       return
     }
-    factory310 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt311 := factory310.GetProtocol(mbTrans308)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPartitionsPsArgs()
-    err312 := containerStruct2.ReadField3(jsProt311)
-    if err312 != nil {
+    factory150 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt151 := factory150.GetProtocol(mbTrans148)
+    containerStruct2 := hive_service.NewThriftHiveGetPartitionsPsArgs()
+    err152 := containerStruct2.ReadField3(jsProt151)
+    if err152 != nil {
       Usage()
       return
     }
     argvalue2 := containerStruct2.PartVals
     value2 := argvalue2
-    tmp3, err313 := (strconv.Atoi(flag.Arg(4)))
-    if err313 != nil {
+    tmp3, err153 := (strconv.Atoi(flag.Arg(4)))
+    if err153 != nil {
       Usage()
       return
     }
@@ -794,26 +879,26 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg316 := flag.Arg(3)
-    mbTrans317 := thrift.NewTMemoryBufferLen(len(arg316))
-    defer mbTrans317.Close()
-    _, err318 := mbTrans317.WriteString(arg316)
-    if err318 != nil { 
+    arg156 := flag.Arg(3)
+    mbTrans157 := thrift.NewTMemoryBufferLen(len(arg156))
+    defer mbTrans157.Close()
+    _, err158 := mbTrans157.WriteString(arg156)
+    if err158 != nil { 
       Usage()
       return
     }
-    factory319 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt320 := factory319.GetProtocol(mbTrans317)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPartitionsPsWithAuthArgs()
-    err321 := containerStruct2.ReadField3(jsProt320)
-    if err321 != nil {
+    factory159 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt160 := factory159.GetProtocol(mbTrans157)
+    containerStruct2 := hive_service.NewThriftHiveGetPartitionsPsWithAuthArgs()
+    err161 := containerStruct2.ReadField3(jsProt160)
+    if err161 != nil {
       Usage()
       return
     }
     argvalue2 := containerStruct2.PartVals
     value2 := argvalue2
-    tmp3, err322 := (strconv.Atoi(flag.Arg(4)))
-    if err322 != nil {
+    tmp3, err162 := (strconv.Atoi(flag.Arg(4)))
+    if err162 != nil {
       Usage()
       return
     }
@@ -821,19 +906,19 @@ func main() {
     value3 := argvalue3
     argvalue4 := flag.Arg(5)
     value4 := argvalue4
-    arg324 := flag.Arg(6)
-    mbTrans325 := thrift.NewTMemoryBufferLen(len(arg324))
-    defer mbTrans325.Close()
-    _, err326 := mbTrans325.WriteString(arg324)
-    if err326 != nil { 
+    arg164 := flag.Arg(6)
+    mbTrans165 := thrift.NewTMemoryBufferLen(len(arg164))
+    defer mbTrans165.Close()
+    _, err166 := mbTrans165.WriteString(arg164)
+    if err166 != nil { 
       Usage()
       return
     }
-    factory327 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt328 := factory327.GetProtocol(mbTrans325)
-    containerStruct5 := hive_metastore.NewThriftHiveMetastoreGetPartitionsPsWithAuthArgs()
-    err329 := containerStruct5.ReadField6(jsProt328)
-    if err329 != nil {
+    factory167 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt168 := factory167.GetProtocol(mbTrans165)
+    containerStruct5 := hive_service.NewThriftHiveGetPartitionsPsWithAuthArgs()
+    err169 := containerStruct5.ReadField6(jsProt168)
+    if err169 != nil {
       Usage()
       return
     }
@@ -851,26 +936,26 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg332 := flag.Arg(3)
-    mbTrans333 := thrift.NewTMemoryBufferLen(len(arg332))
-    defer mbTrans333.Close()
-    _, err334 := mbTrans333.WriteString(arg332)
-    if err334 != nil { 
+    arg172 := flag.Arg(3)
+    mbTrans173 := thrift.NewTMemoryBufferLen(len(arg172))
+    defer mbTrans173.Close()
+    _, err174 := mbTrans173.WriteString(arg172)
+    if err174 != nil { 
       Usage()
       return
     }
-    factory335 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt336 := factory335.GetProtocol(mbTrans333)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPartitionNamesPsArgs()
-    err337 := containerStruct2.ReadField3(jsProt336)
-    if err337 != nil {
+    factory175 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt176 := factory175.GetProtocol(mbTrans173)
+    containerStruct2 := hive_service.NewThriftHiveGetPartitionNamesPsArgs()
+    err177 := containerStruct2.ReadField3(jsProt176)
+    if err177 != nil {
       Usage()
       return
     }
     argvalue2 := containerStruct2.PartVals
     value2 := argvalue2
-    tmp3, err338 := (strconv.Atoi(flag.Arg(4)))
-    if err338 != nil {
+    tmp3, err178 := (strconv.Atoi(flag.Arg(4)))
+    if err178 != nil {
       Usage()
       return
     }
@@ -890,8 +975,8 @@ func main() {
     value1 := argvalue1
     argvalue2 := flag.Arg(3)
     value2 := argvalue2
-    tmp3, err342 := (strconv.Atoi(flag.Arg(4)))
-    if err342 != nil {
+    tmp3, err182 := (strconv.Atoi(flag.Arg(4)))
+    if err182 != nil {
       Usage()
       return
     }
@@ -909,19 +994,19 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg345 := flag.Arg(3)
-    mbTrans346 := thrift.NewTMemoryBufferLen(len(arg345))
-    defer mbTrans346.Close()
-    _, err347 := mbTrans346.WriteString(arg345)
-    if err347 != nil {
+    arg185 := flag.Arg(3)
+    mbTrans186 := thrift.NewTMemoryBufferLen(len(arg185))
+    defer mbTrans186.Close()
+    _, err187 := mbTrans186.WriteString(arg185)
+    if err187 != nil {
       Usage()
       return
     }
-    factory348 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt349 := factory348.GetProtocol(mbTrans346)
+    factory188 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt189 := factory188.GetProtocol(mbTrans186)
     argvalue2 := hive_metastore.NewPartition()
-    err350 := argvalue2.Read(jsProt349)
-    if err350 != nil {
+    err190 := argvalue2.Read(jsProt189)
+    if err190 != nil {
       Usage()
       return
     }
@@ -966,36 +1051,36 @@ func main() {
       fmt.Fprintln(os.Stderr, "AddIndex requires 2 args")
       flag.Usage()
     }
-    arg355 := flag.Arg(1)
-    mbTrans356 := thrift.NewTMemoryBufferLen(len(arg355))
-    defer mbTrans356.Close()
-    _, err357 := mbTrans356.WriteString(arg355)
-    if err357 != nil {
+    arg195 := flag.Arg(1)
+    mbTrans196 := thrift.NewTMemoryBufferLen(len(arg195))
+    defer mbTrans196.Close()
+    _, err197 := mbTrans196.WriteString(arg195)
+    if err197 != nil {
       Usage()
       return
     }
-    factory358 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt359 := factory358.GetProtocol(mbTrans356)
+    factory198 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt199 := factory198.GetProtocol(mbTrans196)
     argvalue0 := hive_metastore.NewIndex()
-    err360 := argvalue0.Read(jsProt359)
-    if err360 != nil {
+    err200 := argvalue0.Read(jsProt199)
+    if err200 != nil {
       Usage()
       return
     }
     value0 := argvalue0
-    arg361 := flag.Arg(2)
-    mbTrans362 := thrift.NewTMemoryBufferLen(len(arg361))
-    defer mbTrans362.Close()
-    _, err363 := mbTrans362.WriteString(arg361)
-    if err363 != nil {
+    arg201 := flag.Arg(2)
+    mbTrans202 := thrift.NewTMemoryBufferLen(len(arg201))
+    defer mbTrans202.Close()
+    _, err203 := mbTrans202.WriteString(arg201)
+    if err203 != nil {
       Usage()
       return
     }
-    factory364 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt365 := factory364.GetProtocol(mbTrans362)
+    factory204 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt205 := factory204.GetProtocol(mbTrans202)
     argvalue1 := hive_metastore.NewTable()
-    err366 := argvalue1.Read(jsProt365)
-    if err366 != nil {
+    err206 := argvalue1.Read(jsProt205)
+    if err206 != nil {
       Usage()
       return
     }
@@ -1014,19 +1099,19 @@ func main() {
     value1 := argvalue1
     argvalue2 := flag.Arg(3)
     value2 := argvalue2
-    arg370 := flag.Arg(4)
-    mbTrans371 := thrift.NewTMemoryBufferLen(len(arg370))
-    defer mbTrans371.Close()
-    _, err372 := mbTrans371.WriteString(arg370)
-    if err372 != nil {
+    arg210 := flag.Arg(4)
+    mbTrans211 := thrift.NewTMemoryBufferLen(len(arg210))
+    defer mbTrans211.Close()
+    _, err212 := mbTrans211.WriteString(arg210)
+    if err212 != nil {
       Usage()
       return
     }
-    factory373 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt374 := factory373.GetProtocol(mbTrans371)
+    factory213 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt214 := factory213.GetProtocol(mbTrans211)
     argvalue3 := hive_metastore.NewIndex()
-    err375 := argvalue3.Read(jsProt374)
-    if err375 != nil {
+    err215 := argvalue3.Read(jsProt214)
+    if err215 != nil {
       Usage()
       return
     }
@@ -1073,8 +1158,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    tmp2, err385 := (strconv.Atoi(flag.Arg(3)))
-    if err385 != nil {
+    tmp2, err225 := (strconv.Atoi(flag.Arg(3)))
+    if err225 != nil {
       Usage()
       return
     }
@@ -1092,8 +1177,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    tmp2, err388 := (strconv.Atoi(flag.Arg(3)))
-    if err388 != nil {
+    tmp2, err228 := (strconv.Atoi(flag.Arg(3)))
+    if err228 != nil {
       Usage()
       return
     }
@@ -1107,19 +1192,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "CreateRole requires 1 args")
       flag.Usage()
     }
-    arg389 := flag.Arg(1)
-    mbTrans390 := thrift.NewTMemoryBufferLen(len(arg389))
-    defer mbTrans390.Close()
-    _, err391 := mbTrans390.WriteString(arg389)
-    if err391 != nil {
+    arg229 := flag.Arg(1)
+    mbTrans230 := thrift.NewTMemoryBufferLen(len(arg229))
+    defer mbTrans230.Close()
+    _, err231 := mbTrans230.WriteString(arg229)
+    if err231 != nil {
       Usage()
       return
     }
-    factory392 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt393 := factory392.GetProtocol(mbTrans390)
+    factory232 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt233 := factory232.GetProtocol(mbTrans230)
     argvalue0 := hive_metastore.NewRole()
-    err394 := argvalue0.Read(jsProt393)
-    if err394 != nil {
+    err234 := argvalue0.Read(jsProt233)
+    if err234 != nil {
       Usage()
       return
     }
@@ -1159,7 +1244,7 @@ func main() {
       Usage()
      return
     }
-    argvalue2 := hive_metastore.PrincipalType(tmp2)
+    argvalue2 := hive_service.PrincipalType(tmp2)
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
@@ -1168,7 +1253,7 @@ func main() {
       Usage()
      return
     }
-    argvalue4 := hive_metastore.PrincipalType(tmp4)
+    argvalue4 := hive_service.PrincipalType(tmp4)
     value4 := argvalue4
     argvalue5 := flag.Arg(6) == "true"
     value5 := argvalue5
@@ -1189,7 +1274,7 @@ func main() {
       Usage()
      return
     }
-    argvalue2 := hive_metastore.PrincipalType(tmp2)
+    argvalue2 := hive_service.PrincipalType(tmp2)
     value2 := argvalue2
     fmt.Print(client.RevokeRole(value0, value1, value2))
     fmt.Print("\n")
@@ -1206,7 +1291,7 @@ func main() {
       Usage()
      return
     }
-    argvalue1 := hive_metastore.PrincipalType(tmp1)
+    argvalue1 := hive_service.PrincipalType(tmp1)
     value1 := argvalue1
     fmt.Print(client.ListRoles(value0, value1))
     fmt.Print("\n")
@@ -1216,38 +1301,38 @@ func main() {
       fmt.Fprintln(os.Stderr, "GetPrivilegeSet requires 3 args")
       flag.Usage()
     }
-    arg403 := flag.Arg(1)
-    mbTrans404 := thrift.NewTMemoryBufferLen(len(arg403))
-    defer mbTrans404.Close()
-    _, err405 := mbTrans404.WriteString(arg403)
-    if err405 != nil {
+    arg243 := flag.Arg(1)
+    mbTrans244 := thrift.NewTMemoryBufferLen(len(arg243))
+    defer mbTrans244.Close()
+    _, err245 := mbTrans244.WriteString(arg243)
+    if err245 != nil {
       Usage()
       return
     }
-    factory406 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt407 := factory406.GetProtocol(mbTrans404)
+    factory246 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt247 := factory246.GetProtocol(mbTrans244)
     argvalue0 := hive_metastore.NewHiveObjectRef()
-    err408 := argvalue0.Read(jsProt407)
-    if err408 != nil {
+    err248 := argvalue0.Read(jsProt247)
+    if err248 != nil {
       Usage()
       return
     }
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    arg410 := flag.Arg(3)
-    mbTrans411 := thrift.NewTMemoryBufferLen(len(arg410))
-    defer mbTrans411.Close()
-    _, err412 := mbTrans411.WriteString(arg410)
-    if err412 != nil { 
+    arg250 := flag.Arg(3)
+    mbTrans251 := thrift.NewTMemoryBufferLen(len(arg250))
+    defer mbTrans251.Close()
+    _, err252 := mbTrans251.WriteString(arg250)
+    if err252 != nil { 
       Usage()
       return
     }
-    factory413 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt414 := factory413.GetProtocol(mbTrans411)
-    containerStruct2 := hive_metastore.NewThriftHiveMetastoreGetPrivilegeSetArgs()
-    err415 := containerStruct2.ReadField3(jsProt414)
-    if err415 != nil {
+    factory253 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt254 := factory253.GetProtocol(mbTrans251)
+    containerStruct2 := hive_service.NewThriftHiveGetPrivilegeSetArgs()
+    err255 := containerStruct2.ReadField3(jsProt254)
+    if err255 != nil {
       Usage()
       return
     }
@@ -1268,21 +1353,21 @@ func main() {
       Usage()
      return
     }
-    argvalue1 := hive_metastore.PrincipalType(tmp1)
+    argvalue1 := hive_service.PrincipalType(tmp1)
     value1 := argvalue1
-    arg417 := flag.Arg(3)
-    mbTrans418 := thrift.NewTMemoryBufferLen(len(arg417))
-    defer mbTrans418.Close()
-    _, err419 := mbTrans418.WriteString(arg417)
-    if err419 != nil {
+    arg257 := flag.Arg(3)
+    mbTrans258 := thrift.NewTMemoryBufferLen(len(arg257))
+    defer mbTrans258.Close()
+    _, err259 := mbTrans258.WriteString(arg257)
+    if err259 != nil {
       Usage()
       return
     }
-    factory420 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt421 := factory420.GetProtocol(mbTrans418)
+    factory260 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt261 := factory260.GetProtocol(mbTrans258)
     argvalue2 := hive_metastore.NewHiveObjectRef()
-    err422 := argvalue2.Read(jsProt421)
-    if err422 != nil {
+    err262 := argvalue2.Read(jsProt261)
+    if err262 != nil {
       Usage()
       return
     }
@@ -1295,19 +1380,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "GrantPrivileges requires 1 args")
       flag.Usage()
     }
-    arg423 := flag.Arg(1)
-    mbTrans424 := thrift.NewTMemoryBufferLen(len(arg423))
-    defer mbTrans424.Close()
-    _, err425 := mbTrans424.WriteString(arg423)
-    if err425 != nil {
+    arg263 := flag.Arg(1)
+    mbTrans264 := thrift.NewTMemoryBufferLen(len(arg263))
+    defer mbTrans264.Close()
+    _, err265 := mbTrans264.WriteString(arg263)
+    if err265 != nil {
       Usage()
       return
     }
-    factory426 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt427 := factory426.GetProtocol(mbTrans424)
+    factory266 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt267 := factory266.GetProtocol(mbTrans264)
     argvalue0 := hive_metastore.NewPrivilegeBag()
-    err428 := argvalue0.Read(jsProt427)
-    if err428 != nil {
+    err268 := argvalue0.Read(jsProt267)
+    if err268 != nil {
       Usage()
       return
     }
@@ -1320,19 +1405,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "RevokePrivileges requires 1 args")
       flag.Usage()
     }
-    arg429 := flag.Arg(1)
-    mbTrans430 := thrift.NewTMemoryBufferLen(len(arg429))
-    defer mbTrans430.Close()
-    _, err431 := mbTrans430.WriteString(arg429)
-    if err431 != nil {
+    arg269 := flag.Arg(1)
+    mbTrans270 := thrift.NewTMemoryBufferLen(len(arg269))
+    defer mbTrans270.Close()
+    _, err271 := mbTrans270.WriteString(arg269)
+    if err271 != nil {
       Usage()
       return
     }
-    factory432 := thrift.NewTSimpleJSONProtocolFactory()
-    jsProt433 := factory432.GetProtocol(mbTrans430)
+    factory272 := thrift.NewTSimpleJSONProtocolFactory()
+    jsProt273 := factory272.GetProtocol(mbTrans270)
     argvalue0 := hive_metastore.NewPrivilegeBag()
-    err434 := argvalue0.Read(jsProt433)
-    if err434 != nil {
+    err274 := argvalue0.Read(jsProt273)
+    if err274 != nil {
       Usage()
       return
     }
@@ -1467,8 +1552,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "GetCpuProfile requires 1 args")
       flag.Usage()
     }
-    tmp0, err444 := (strconv.Atoi(flag.Arg(1)))
-    if err444 != nil {
+    tmp0, err284 := (strconv.Atoi(flag.Arg(1)))
+    if err284 != nil {
       Usage()
       return
     }
