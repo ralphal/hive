@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log"
 	"time"
+	"reflect"
 
 	"git.apache.org/thrift.git/lib/go/thrift"
 	thrifthive "github.com/ralphal/hive/thriftlib"
@@ -131,11 +132,6 @@ func (conn *Connection) GetMetaData() (*thrifthive.TTableSchema, error) {
 	return schema, nil
 }
 
-func isOK(p *thrifthive.TStatus) bool {
-	status := p.GetStatusCode()
-	return status == thrifthive.TStatusCode_SUCCESS_STATUS || status == thrifthive.TStatusCode_SUCCESS_WITH_INFO_STATUS
-}
-
 // FetchRows ...
 func (conn *Connection) FetchRows() (*thrifthive.TRowSet, bool, error) {
 	req := thrifthive.NewTFetchResultsReq()
@@ -171,6 +167,8 @@ func (conn *Connection) Wait() (bool, error) {
 			continue
 		}
 
+		log.Println("state=", state, "status=", status)
+
 		if !isOK(status) {
 			return false, nil
 		}
@@ -192,4 +190,60 @@ func (conn *Connection) GetStatus() (*thrifthive.TStatus, thrifthive.TOperationS
 	}
 
 	return resp.Status, *resp.OperationState, nil
+}
+
+
+func isOK(p *thrifthive.TStatus) bool {
+	status := p.GetStatusCode()
+	return status == thrifthive.TStatusCode_SUCCESS_STATUS || status == thrifthive.TStatusCode_SUCCESS_WITH_INFO_STATUS
+}
+
+// Rows2Map 格式化
+func Rows2Map(rows *thrifthive.TRowSet, schema *thrifthive.TTableSchema) (ret []map[string]interface{}) {
+	var colValues = make(map[string]interface{}, 0)
+	var rowLen int
+
+	for cpos, tcol := range rows.Columns {
+		colName := schema.Columns[cpos].ColumnName
+
+		switch true {
+		case tcol.IsSetBinaryVal():
+			colValues[colName] = tcol.GetBinaryVal().GetValues()
+			rowLen = len(tcol.GetBinaryVal().GetValues())
+		case tcol.IsSetBoolVal():
+			colValues[colName] = tcol.GetBoolVal().GetValues()
+			rowLen = len(tcol.GetBoolVal().GetValues())
+		case tcol.IsSetByteVal():
+			colValues[colName] = tcol.GetByteVal().GetValues()
+			rowLen = len(tcol.GetByteVal().GetValues())
+		case tcol.IsSetDoubleVal():
+			colValues[colName] = tcol.GetDoubleVal().GetValues()
+			rowLen = len(tcol.GetDoubleVal().GetValues())
+		case tcol.IsSetI16Val():
+			colValues[colName] = tcol.GetI16Val().GetValues()
+			rowLen = len(tcol.GetI16Val().GetValues())
+		case tcol.IsSetI32Val():
+			colValues[colName] = tcol.GetI32Val().GetValues()
+			rowLen = len(tcol.GetI32Val().GetValues())
+		case tcol.IsSetI64Val():
+			colValues[colName] = tcol.GetI64Val().GetValues()
+			rowLen = len(tcol.GetI64Val().GetValues())
+		case tcol.IsSetStringVal():
+			colValues[colName] = tcol.GetStringVal().GetValues()
+			rowLen = len(tcol.GetStringVal().GetValues())
+		}
+	}
+
+	// 将列结构转换成行结构
+	for i := 0; i < rowLen; i++ {
+		formatedRow := make(map[string]interface{}, 0)
+		for colName, colValueList := range colValues {
+			// column => [v1, v2, v3, ...]
+			formatedRow[colName] = reflect.ValueOf(colValueList).Index(i).Interface()
+		}
+
+		ret = append(ret, formatedRow)
+	}
+
+	return ret
 }
