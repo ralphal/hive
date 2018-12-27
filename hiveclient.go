@@ -31,11 +31,9 @@ package hive
 
 import (
   "errors"
-  "fmt"
   thrifthive "github.com/ralphal/hive/thriftlib"
-  "github.com/ralphal/thrift4go/lib/go/thrift"
+  "git.apache.org/thrift.git/lib/go/thrift"
   "log"
-  "net"
 )
 
 type HiveConnection struct {
@@ -89,12 +87,8 @@ func getConnFromPool() (conn *HiveConnection, err error) {
 func (conn *HiveConnection) Open() error {
 
   log.Println("creating new hive connection ")
-  tcpConn, er := net.Dial("tcp", conn.Server)
-  if er != nil {
-    return er
-  }
 
-  trans, _ := thrift.NewTSocketConn(tcpConn)
+  trans, _ := thrift.NewTSocket(conn.Server)
   trans.Open()
 
   protocolfac := thrift.NewTBinaryProtocolFactoryDefault()
