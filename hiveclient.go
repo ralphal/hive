@@ -24,7 +24,7 @@ var (
 	_user     string
 	_password string
 
-	_batchsize int64 = 1000
+	_batchsize = 1000
 	_sleep = 1
 	_socketTimeout = 10
 )
@@ -138,7 +138,7 @@ func (conn *Connection) FetchRows() (*thrifthive.TRowSet, bool, error) {
 	req := thrifthive.NewTFetchResultsReq()
 	req.OperationHandle = conn.OperationHandle
 	req.Orientation = thrifthive.TFetchOrientation_FETCH_NEXT
-	req.MaxRows = _batchsize
+	req.MaxRows = int64(_batchsize)
 
 	socket := conn.Client.Transport.(*thrift.TSocket)
 	socket.SetTimeout(time.Duration(_socketTimeout) * time.Second)
