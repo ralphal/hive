@@ -26,6 +26,7 @@ var (
 
 	_batchsize int64 = 1000
 	_sleep = 1
+	_socketTimeout = 10
 )
 
 // SetUserPassword ...
@@ -140,12 +141,15 @@ func (conn *Connection) FetchRows() (*thrifthive.TRowSet, bool, error) {
 	req.MaxRows = _batchsize
 
 	socket := conn.Client.Transport.(*thrift.TSocket)
-	socket.SetTimeout(10 * time.Second)
+	socket.SetTimeout(time.Duration(_socketTimeout) * time.Second)
 
 	resp, err := conn.Client.FetchResults(req)
 	if err != nil {
+		log.Println("err=", err)
 		return nil, false, err
 	}
+
+	log.Println("resp=", resp)
 
 	if !isOK(resp.Status) {
 		return nil, false, errors.New("fetchResults failed, " + resp.Status.String())
@@ -167,7 +171,7 @@ func (conn *Connection) Wait() (bool, error) {
 			continue
 		}
 
-		log.Println("state=", state, "status=", status)
+		log.Println("state=", state.String(), "status=", status.String())
 
 		if !isOK(status) {
 			return false, nil
@@ -188,6 +192,8 @@ func (conn *Connection) GetStatus() (*thrifthive.TStatus, thrifthive.TOperationS
 	if err != nil {
 		return nil, 0, err
 	}
+
+	log.Println("resp=", resp)
 
 	return resp.Status, *resp.OperationState, nil
 }
