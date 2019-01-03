@@ -1,4 +1,4 @@
-This is ref from araddon & gohive  Many thanks!
+This is refrence from araddon & gohive  Many thanks!
 
 adapt to hive server thrift0.9.3
 
